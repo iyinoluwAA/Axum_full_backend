@@ -38,7 +38,7 @@ pub async fn send_welcome_email(
 
 pub async fn send_forget_password_email(
     to_email: &str,
-    rest_link: &str,
+    reset_link: &str,
     username: &str
 ) -> Result<(), Box<dyn std::error::Error>> {
     let subject = "Reset your Password";
