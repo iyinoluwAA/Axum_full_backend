@@ -7,12 +7,16 @@ mod utils;
 mod middleware;
 mod mail;
 mod handler;
+mod routes;
 
 
-use axum::{http::{header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE}, HeaderValue, Method}, Extension, Router};
+use std::sync::Arc;
+
+use axum::http::{header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE}, HeaderValue, Method};
 use config::Config;
 use db::DBClient;
 use dotenv::dotenv;
+use routes::create_router;
 use sqlx::postgres::PgPoolOptions;
 use tower_http::cors::CorsLayer;
 use tracing_subscriber::filter::LevelFilter;
@@ -50,7 +54,7 @@ async fn main (){
     };
 
     let cors = CorsLayer::new()
-            .allow_origin("http://localhost:3015".parse::<HeaderValue>().unwrap())
+            .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
             .allow_headers([AUTHORIZATION, ACCEPT, CONTENT_TYPE])
             .allow_credentials(true)
             .allow_methods([Method::GET, Method::POST,Method::PUT]);
@@ -61,14 +65,13 @@ async fn main (){
             db_client,
         };
 
-    let app = Router::new()
-            .layer(Extension(app_state))
-            .layer(cors.clone());
+    let app = create_router(Arc::new(app_state.clone())).layer(cors.clone());
 
-            println!(
-                "{}",
-                format!("🚀 Server is running on http://localhost:{}", config.port)
-            );
+    println!(
+         "{}",
+         format!("🚀 Server is running on http://localhost:{}", config.port)
+    );
+
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", &config.port))
             .await
             .unwrap();
